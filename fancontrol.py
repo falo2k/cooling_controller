@@ -19,7 +19,7 @@ FAN_MAX_THRESHOLD=55
 FAN_LOW_LIMIT=0.05
 FAN_POINT_COUNT=30
 
-FAN_SET_POINTS=[FAN_LOW_LIMIT + ((1.-FAN_LOW_LIMIT)*(float(x)/FAN_POINT_COUNT)) for x in range(1,FAN_POINT_COUNT+1)]
+FAN_SET_POINTS=[FAN_LOW_LIMIT + ((1.-FAN_LOW_LIMIT)*((float(x)/FAN_POINT_COUNT)** 2)) for x in range(1,FAN_POINT_COUNT+1)]
 
 rpm = 0
 t = time.time()
@@ -31,7 +31,7 @@ def get_speed(temperature):
         return 1.
     else:
         index = int(math.floor((FAN_POINT_COUNT-1) * ((temperature - FAN_OFF_THRESHOLD)/(FAN_MAX_THRESHOLD - FAN_OFF_THRESHOLD))))
-        return FAN_SET_POINTS[index]
+        return min(max(FAN_SET_POINTS[index],0.),1.)
 
 def tick():
     global rpm
@@ -49,7 +49,7 @@ tach.when_pressed = tick
 
 try:
     while True:
-        print(get_speed(cpu.temperature))
+        fan.value = get_speed(cpu.temperature)
         logging.info("CPU: {0}°C Fan Speed: {1}% RPM: {2}".format(round(cpu.temperature, 1), fan.value * 100., round(rpm, 1)))
         time.sleep(5)
 
